@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Socket.IO chat</title>
+        <style>
+        /*CSS Styling*/
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font: 13px Helvetica, Arial; }
+            #msgsend { padding: 3px; position: fixed; bottom: 0; width: 100%; }
+            form { background: #000; padding: 3px; color: #fff;}
+            form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; color: #000; }
+            form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+            #messages { list-style-type: none; margin: 0; padding: 0; }
+            #messages li { padding: 5px 10px; }
+            #messages li:nth-child(odd) { background: #eee; }
+        </style>
+    </head>
+    <body>
+        <form id="usersubmit">
+            Room Name:
+            <input type="text" id="r" value="" />
+            Username:
+            <input type="text" id="u" value="" />
+            <button>Submit</button>
+        </form>
+        <!--Chat Box-->
+        <ul id="messages"></ul>
+        <form action="" id="msgsend">
+            <input id="m" autocomplete="off" /><button>Send</button>
+        </form>
+    </body>
+    <!--Scripting for websocket-->
+    <script src="/socket.io/socket.io.js"></script>     <!-- runs socket.io -->
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script><!-- runs jquery 1.11.1 -->
+    <script>
+    //Socket.io connection
+        var socket = io();                              //http server that does auto-discovery
+        var room;
+        var user;
+        $('#messages').hide();
+        $('#msgsend').hide();
+            $('#msgsend').submit(function(e){                    //submit function for form
+                socket.emit('chat message', $('#m').val()); //send message m as chat message to websocket
+                $('#m').val('');                            //empty message field m
+                e.preventDefault();                               //exit
+            });
+            $('#usersubmit').submit(function(e){
+                room = $('#r').val();
+                user = $('#u').val();
+                if(room != '' && user != ''){
+                    socket.emit('room name', room, user);
+                    $('#usersubmit').hide();
+                    $('#messages').show();
+                    $('#msgsend').show();
+                    e.preventDefault();
+                }
+                else{
+                    alert("Please enter a roomname or username!");
+                    e.preventDefault();
+                }
+            });
+            socket.on('chat message', function(msg){
+                $('#messages').append($('<li>').text(msg));
+            });
+            if(Window.close()){
+                socket.emit('disconnect');
+            }
+    </script>
+</html>
